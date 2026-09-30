@@ -94,7 +94,10 @@ Em **Settings → Secrets and variables → Actions** do repositório:
 
 - *secret* `DATABASE_URL` — a URL do Neon no formato `postgresql://` (aqui é o
   formato do Python, **não** o JDBC)
-- *variable* `ANP_CSV_URL` — o endereço do arquivo semanal da ANP
+
+O workflow resolve automaticamente a planilha de revendas mais recente na
+página oficial da ANP. Em um disparo manual, o campo `url` pode sobrescrever
+essa descoberta para reprocessar uma semana oficial específica.
 
 ## 5. Depois do deploy
 
