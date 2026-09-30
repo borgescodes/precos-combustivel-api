@@ -31,5 +31,7 @@ jobs:
       - name: Carregar dados
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          ANP_CSV_URL: ${{ inputs.url || vars.ANP_CSV_URL }}
-        run: python loader/loader.py --url "$ANP_CSV_URL"
+          ANP_CSV_URL: ${{ inputs.url }}
+        run: |
+          URL="${ANP_CSV_URL:-$(python loader/anp_latest.py)}"
+          python loader/loader.py --url "$URL"

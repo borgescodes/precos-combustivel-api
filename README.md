@@ -132,8 +132,9 @@ python -m pytest loader/tests -q
 ## Carga automática
 
 O workflow `.github/workflows/carga-semanal.yml` roda toda quarta-feira, executa
-os testes e carrega os dados novos. Precisa de dois valores configurados no
-repositório: o *secret* `DATABASE_URL` e a *variable* `ANP_CSV_URL`.
+os testes, resolve a planilha de revendas mais recente no site oficial da ANP e
+carrega os dados novos. Precisa apenas do *secret* `DATABASE_URL`. O disparo
+manual aceita uma URL oficial opcional para reprocessar uma semana específica.
 
 ## Roadmap
 
