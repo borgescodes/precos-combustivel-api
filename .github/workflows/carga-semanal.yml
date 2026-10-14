@@ -40,3 +40,27 @@ jobs:
         run: |
           URL="${ANP_CSV_URL:-$(python loader/anp_latest.py)}"
           python loader/loader.py --url "$URL"
+
+
+      - name: Conferir referência de Paragominas
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'PY'
+          import os
+          import psycopg
+
+          with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+              with conn.cursor() as cur:
+                  cur.execute("""
+                      SELECT semana_inicio, semana_fim, produto,
+                             preco_medio, preco_maximo, postos_pesquisados
+                      FROM resumo_semanal
+                      WHERE uf = 'PA' AND municipio = 'PARAGOMINAS'
+                        AND produto LIKE 'GASOLINA%'
+                      ORDER BY semana_inicio DESC, produto
+                      LIMIT 12
+                  """)
+                  for row in cur.fetchall():
+                      print("Paragominas ANP:", row)
+          PY
