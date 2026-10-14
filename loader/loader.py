@@ -241,13 +241,13 @@ INSERT INTO resumo_semanal
     (semana_inicio, semana_fim, uf, municipio, produto,
      preco_medio, preco_minimo, preco_maximo, postos_pesquisados)
 SELECT
-    (date_trunc('week', data_coleta))::date,
-    (date_trunc('week', data_coleta) + INTERVAL '6 days')::date,
+    (date_trunc('week', data_coleta + INTERVAL '1 day') - INTERVAL '1 day')::date,
+    (date_trunc('week', data_coleta + INTERVAL '1 day') + INTERVAL '5 days')::date,
     uf, municipio, produto,
     ROUND(AVG(valor_venda), 3), MIN(valor_venda), MAX(valor_venda), COUNT(*)
 FROM preco_coleta
 WHERE data_coleta BETWEEN %s AND %s
-GROUP BY date_trunc('week', data_coleta), uf, municipio, produto
+GROUP BY date_trunc('week', data_coleta + INTERVAL '1 day'), uf, municipio, produto
 ON CONFLICT (semana_inicio, uf, municipio, produto) DO UPDATE SET
     semana_fim         = EXCLUDED.semana_fim,
     preco_medio        = EXCLUDED.preco_medio,
