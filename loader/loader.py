@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import io
 import os
+import re
 import sys
 import unicodedata
 from datetime import date
@@ -214,14 +215,40 @@ def preparar(df: pd.DataFrame) -> pd.DataFrame:
     saida["municipio"] = saida["municipio"].map(normalizar_municipio)
     saida["produto"] = saida["produto"].map(lambda p: sem_acento(p).upper().strip())
     saida["uf"] = saida["uf"].map(normalizar_uf)
-    saida["data_coleta"] = pd.to_datetime(
-        saida["data_coleta"], dayfirst=True, errors="coerce"
-    ).dt.date
+    # XLSX da ANP usa ISO (AAAA-MM-DD HH:MM:SS); CSV historico usa DD/MM/AAAA.
+    # dayfirst=True inverte silenciosamente outubro/maio para datas ISO ambiguas.
+    datas = pd.to_datetime(
+        saida["data_coleta"], format="ISO8601", errors="coerce"
+    )
+    datas = datas.fillna(pd.to_datetime(
+        saida["data_coleta"], format="%d/%m/%Y", errors="coerce"
+    ))
+    saida["data_coleta"] = datas.dt.date
 
     antes = len(saida)
     saida = saida.dropna(subset=["valor_venda", "data_coleta", "municipio", "produto", "uf"])
     print(f"{antes - len(saida)} linhas descartadas por dado invalido")
     return saida
+
+
+def validar_periodo_arquivo(df: pd.DataFrame, fonte: str) -> None:
+    """Impede carga verde com datas fora da semana declarada no arquivo oficial."""
+    nome = os.path.basename(urlparse(fonte).path)
+    match = re.fullmatch(
+        r"revendas_lpc_(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})\.xlsx",
+        nome,
+        re.IGNORECASE,
+    )
+    if not match:
+        return
+
+    inicio, fim = (date.fromisoformat(valor) for valor in match.groups())
+    fora = ~df["data_coleta"].between(inicio, fim)
+    if df.empty or fora.any():
+        raise ValueError(
+            f"Datas de coleta fora do periodo oficial {inicio} a {fim}: "
+            f"{int(fora.sum())} registros invalidos"
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -291,6 +318,7 @@ def main() -> None:
     bruto = ler_arquivo(args.arquivo, args.url)
     print(f"{len(bruto)} linhas lidas")
     limpo = preparar(bruto)
+    validar_periodo_arquivo(limpo, args.url or args.arquivo)
     gravar(limpo, args.dsn)
     print("pronto")
 

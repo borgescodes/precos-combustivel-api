@@ -130,3 +130,40 @@ def test_agregacao_semanal_respeita_periodo_anp_domingo_a_sabado():
     assert "data_coleta + INTERVAL '1 day'" in AGREGA
     assert "INTERVAL '5 days'" in AGREGA
     assert "GROUP BY date_trunc('week', data_coleta + INTERVAL '1 day')" in AGREGA
+
+
+
+def test_datas_de_outubro_do_excel_nao_invertem_mes_e_dia():
+    from datetime import date
+    from loader import preparar
+
+    df = pd.DataFrame({
+        "ESTADO": ["PARÁ"] * 3,
+        "MUNICÍPIO": ["PARAGOMINAS"] * 3,
+        "PRODUTO": ["GASOLINA COMUM"] * 3,
+        "DATA DA COLETA": [
+            "2026-10-05 00:00:00", "2026-10-09", "09/10/2026"
+        ],
+        "PREÇO DE REVENDA": ["7,05"] * 3,
+    })
+    resultado = preparar(df)
+
+    assert resultado["data_coleta"].tolist() == [
+        date(2026, 10, 5), date(2026, 10, 9), date(2026, 10, 9)
+    ]
+
+
+def test_carga_semanal_falha_se_datas_nao_batem_com_nome_oficial():
+    from datetime import date
+    from loader import validar_periodo_arquivo
+
+    url = (
+        "https://www.gov.br/anp/arquivos-lpc/2026/"
+        "revendas_lpc_2026-10-04_2026-10-10.xlsx"
+    )
+    df = pd.DataFrame({"data_coleta": [date(2026, 5, 10)]})
+    with pytest.raises(ValueError, match="fora do periodo oficial"):
+        validar_periodo_arquivo(df, url)
+
+    df["data_coleta"] = [date(2026, 10, 5)]
+    validar_periodo_arquivo(df, url)
