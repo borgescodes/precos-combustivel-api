@@ -235,7 +235,7 @@ def validar_periodo_arquivo(df: pd.DataFrame, fonte: str) -> None:
     """Impede carga verde com datas fora da semana declarada no arquivo oficial."""
     nome = os.path.basename(urlparse(fonte).path)
     match = re.fullmatch(
-        r"revendas_lpc_(\\d{4}-\\d{2}-\\d{2})_(\\d{4}-\\d{2}-\\d{2})\\.xlsx",
+        r"revendas_lpc_(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})\.xlsx",
         nome,
         re.IGNORECASE,
     )
