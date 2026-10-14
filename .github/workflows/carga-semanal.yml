@@ -3,6 +3,11 @@ name: Carga semanal ANP
 # A ANP publica os dados da semana aos poucos; sábado antecipa a atualização,
 # quarta-feira funciona como segunda oportunidade após atrasos de publicação.
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/carga-semanal.yml"
+      - "loader/**"
   schedule:
     - cron: "0 12 * * 3,6"
   workflow_dispatch:
