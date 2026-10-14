@@ -122,3 +122,11 @@ def test_mapear_colunas_do_arquivo_semanal_de_revendas():
 def test_normalizar_uf(entrada, esperado):
     from loader import normalizar_uf
     assert normalizar_uf(entrada) == esperado
+
+
+def test_agregacao_semanal_respeita_periodo_anp_domingo_a_sabado():
+    from loader import AGREGA
+
+    assert "data_coleta + INTERVAL '1 day'" in AGREGA
+    assert "INTERVAL '5 days'" in AGREGA
+    assert "GROUP BY date_trunc('week', data_coleta + INTERVAL '1 day')" in AGREGA
